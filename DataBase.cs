@@ -13,6 +13,8 @@ namespace ProyectoAdmonGrupo4
         private List<Departamento> departamentos = new List<Departamento>();
         private Stack<List<Empleado>> checkpointStack = new Stack<List<Empleado>>();
         private List<string> logTransacciones = new List<string>();
+        private Stack<List<Departamento>> checkpointDepartamentosStack = new Stack<List<Departamento>>();
+        private Stack<List<string>> checkpointLogStack = new Stack<List<string>>();
 
         public void InsertarEmpleado(int id, string nombre, int idDepartamento)
         {
@@ -92,14 +94,20 @@ namespace ProyectoAdmonGrupo4
         public void HacerCheckpoint()
         {
             checkpointStack.Push(new List<Empleado>(empleados));
+            checkpointDepartamentosStack.Push(new List<Departamento>(departamentos));
+            checkpointLogStack.Push(new List<string>(logTransacciones));
+
             Console.WriteLine("Checkpoint guardado.");
         }
 
         public void Rollback()
         {
-            if (checkpointStack.Count > 0)
+            if (checkpointStack.Count > 0 && checkpointDepartamentosStack.Count > 0 && checkpointLogStack.Count > 0)
             {
                 empleados = checkpointStack.Pop();
+                departamentos = checkpointDepartamentosStack.Pop();
+                logTransacciones = checkpointLogStack.Pop();
+
                 Console.WriteLine("Se restauró el último checkpoint.");
             }
             else
@@ -116,5 +124,6 @@ namespace ProyectoAdmonGrupo4
                 Console.WriteLine(log);
             }
         }
+
     }
 }
