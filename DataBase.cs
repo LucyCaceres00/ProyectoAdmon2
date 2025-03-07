@@ -112,7 +112,7 @@ namespace ProyectoAdmonGrupo4
             }
             else
             {
-                Console.WriteLine("No hay checkpoints guardados.");
+                Console.WriteLine("No hay checkpoints guardados");
             }
         }
 
