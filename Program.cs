@@ -63,7 +63,7 @@ namespace ProyectoAdmonGrupo4
                         break;
                     case "7":
                         Console.Write("ID Departamento: "); int idDepDel = int.Parse(Console.ReadLine());
-                        bd.EliminarEmpleado(idDepDel);
+                        bd.EliminarDepartamento(idDepDel);
                         break;
                     case "8":
                         bd.MostrarDepartamentos();

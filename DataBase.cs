@@ -45,8 +45,15 @@ namespace ProyectoAdmonGrupo4
 
         public void MostrarEmpleados()
         {
-            Console.WriteLine("\nEmpleados:");
-            empleados.ForEach(Console.WriteLine);
+            if (!(empleados.Count() > 0))
+            {
+                Console.WriteLine("\nNo hay empleados guardados.");
+            }
+            else
+            {
+                Console.WriteLine("\nEmpleados:");
+                empleados.ForEach(Console.WriteLine);
+            }
         }
 
         public void InsertarDepartamento(int id, string nombre)
@@ -75,10 +82,17 @@ namespace ProyectoAdmonGrupo4
 
         public void MostrarDepartamentos()
         {
-            Console.WriteLine("\nDepartamentos:");
-            foreach (var dep in departamentos)
+            if (!(departamentos.Count() > 0))
             {
-                Console.WriteLine(dep);
+                Console.WriteLine("\nNo hay departamentos guardados.");
+            }
+            else
+            {
+                Console.WriteLine("\nDepartamentos:");
+                foreach (var dep in departamentos)
+                {
+                    Console.WriteLine(dep);
+                }
             }
         }
 
@@ -124,6 +138,5 @@ namespace ProyectoAdmonGrupo4
                 Console.WriteLine(log);
             }
         }
-
     }
 }
