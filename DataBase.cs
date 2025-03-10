@@ -133,10 +133,67 @@ namespace ProyectoAdmonGrupo4
         public void ReaplicarTransacciones()
         {
             Console.WriteLine("Reaplicando transacciones...");
+
             foreach (var log in logTransacciones)
             {
-                Console.WriteLine(log);
+                string[] partes = log.Split(' ');
+                string operacion = partes[0];
+
+                switch (operacion)
+                {
+                    case "INSERT":
+                        if (partes[1] == "DEPARTAMENTO")
+                        {
+                            int idDep = int.Parse(partes[2]);
+                            string nombreDep = partes[3];
+                            if (!departamentos.Any(d => d.Id == idDep))
+                            {
+                                departamentos.Add(new Departamento(idDep, nombreDep));
+                                Console.WriteLine($"Reinsertado Departamento: {idDep}, {nombreDep}");
+                            }
+                        }
+                        else
+                        {
+                            int idEmp = int.Parse(partes[1]);
+                            string nombreEmp = partes[2];
+                            int idDep = int.Parse(partes[3]);
+                            if (!empleados.Any(e => e.Id == idEmp))
+                            {
+                                empleados.Add(new Empleado(idEmp, nombreEmp, idDep));
+                                Console.WriteLine($"Reinsertado Empleado: {idEmp}, {nombreEmp}, {idDep}");
+                            }
+                        }
+                        break;
+
+                    case "UPDATE":
+                        int idUpdate = int.Parse(partes[1]);
+                        string nuevoNombre = partes[2];
+                        var empleado = empleados.FirstOrDefault(e => e.Id == idUpdate);
+                        if (empleado != null)
+                        {
+                            empleado.Nombre = nuevoNombre;
+                            Console.WriteLine($"Actualizado Empleado: {idUpdate}, {nuevoNombre}");
+                        }
+                        else
+                        {
+                            var departamento = departamentos.FirstOrDefault(d => d.Id == idUpdate);
+                            if (departamento != null)
+                            {
+                                departamento.Nombre = nuevoNombre;
+                                Console.WriteLine($"Actualizado Departamento: {idUpdate}, {nuevoNombre}");
+                            }
+                        }
+                        break;
+
+                    case "DELETE":
+                        int idDelete = int.Parse(partes[1]);
+                        empleados.RemoveAll(e => e.Id == idDelete);
+                        departamentos.RemoveAll(d => d.Id == idDelete);
+                        Console.WriteLine($"Eliminado ID: {idDelete}");
+                        break;
+                }
             }
+            Console.WriteLine("Transacciones reaplicadas correctamente.");
         }
     }
 }
