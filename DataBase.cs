@@ -12,9 +12,9 @@ namespace ProyectoAdmonGrupo4
         private List<Empleado> empleados = new List<Empleado>();
         private List<Departamento> departamentos = new List<Departamento>();
         private Stack<List<Empleado>> checkpointStack = new Stack<List<Empleado>>();
-        private List<string> logTransacciones = new List<string>();
         private Stack<List<Departamento>> checkpointDepartamentosStack = new Stack<List<Departamento>>();
         private Stack<List<string>> checkpointLogStack = new Stack<List<string>>();
+        private List<string> logTransacciones = new List<string>();
 
         public void InsertarEmpleado(int id, string nombre, int idDepartamento)
         {
@@ -25,6 +25,15 @@ namespace ProyectoAdmonGrupo4
             }
             empleados.Add(new Empleado(id, nombre, idDepartamento));
             logTransacciones.Add($"INSERT {id} {nombre} {idDepartamento}");
+        }
+        private List<Empleado> ClonarListaEmpleados(List<Empleado> lista)
+        {
+            return lista.Select(e => new Empleado(e.Id, e.Nombre, e.IdDepartamento)).ToList();
+        }
+
+        private List<Departamento> ClonarListaDepartamentos(List<Departamento> lista)
+        {
+            return lista.Select(d => new Departamento(d.Id, d.Nombre)).ToList();
         }
 
         public void ActualizarEmpleado(int id, string nuevoNombre)
@@ -107,26 +116,24 @@ namespace ProyectoAdmonGrupo4
 
         public void HacerCheckpoint()
         {
-            checkpointStack.Push(new List<Empleado>(empleados));
-            checkpointDepartamentosStack.Push(new List<Departamento>(departamentos));
+            checkpointStack.Push(ClonarListaEmpleados(empleados));
+            checkpointDepartamentosStack.Push(ClonarListaDepartamentos(departamentos));
             checkpointLogStack.Push(new List<string>(logTransacciones));
-
-            Console.WriteLine("Checkpoint guardado.");
+            Console.WriteLine("Checkpoint guardado correctamente.");
         }
 
         public void Rollback()
         {
             if (checkpointStack.Count > 0 && checkpointDepartamentosStack.Count > 0 && checkpointLogStack.Count > 0)
             {
-                empleados = checkpointStack.Pop();
-                departamentos = checkpointDepartamentosStack.Pop();
-                logTransacciones = checkpointLogStack.Pop();
-
-                Console.WriteLine("Se restauró el último checkpoint.");
+                empleados = ClonarListaEmpleados(checkpointStack.Pop());
+                departamentos = ClonarListaDepartamentos(checkpointDepartamentosStack.Pop());
+                logTransacciones = new List<string>(checkpointLogStack.Pop());
+                Console.WriteLine("Se restauró el último checkpoint correctamente.");
             }
             else
             {
-                Console.WriteLine("No hay checkpoints guardados");
+                Console.WriteLine("No hay checkpoints guardados.");
             }
         }
 
