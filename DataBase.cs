@@ -8,7 +8,6 @@ namespace ProyectoAdmonGrupo4
 {
     public class DataBase
     {
-
         private List<Empleado> empleados = new List<Empleado>();
         private List<Departamento> departamentos = new List<Departamento>();
         private Stack<List<Empleado>> checkpointStack = new Stack<List<Empleado>>();
