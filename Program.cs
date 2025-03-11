@@ -27,7 +27,8 @@ namespace ProyectoAdmonGrupo4
                 Console.WriteLine("9. Guardar Checkpoint");
                 Console.WriteLine("10. Rollback (Deshacer/Undo)");
                 Console.WriteLine("11. Reaplicar Transacciones");
-                Console.WriteLine("12. Salir");
+                Console.WriteLine("12. Simular fallo");
+                Console.WriteLine("13. Salir");
                 Console.Write("Opción: ");
 
                 string opcion = Console.ReadLine();
@@ -78,6 +79,9 @@ namespace ProyectoAdmonGrupo4
                         bd.ReaplicarTransacciones();
                         break;
                     case "12":
+                        bd.SimularFallo();
+                        break;
+                    case "13":
                         ejecutando = false;
                         break;
                     default:

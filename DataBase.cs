@@ -195,5 +195,12 @@ namespace ProyectoAdmonGrupo4
             }
             Console.WriteLine("Transacciones reaplicadas correctamente.");
         }
+        public void SimularFallo()
+        {
+            Console.WriteLine("Simulando un fallo del sistema...");
+            empleados.Clear();
+            departamentos.Clear();
+            Console.WriteLine("Se ha producido un fallo y los datos en memoria han sido eliminados.");
+        }
     }
 }
