@@ -13,6 +13,7 @@ namespace ProyectoAdmonGrupo4
             DataBase bd = new DataBase();
             Auth auth = new Auth();
             bool ejecutando = true;
+            bd.HacerCheckpoint();
 
             while (ejecutando)
             {
@@ -40,7 +41,7 @@ namespace ProyectoAdmonGrupo4
                             Console.Write("Ingresa tu nombre: ");
                             string newUserName = Console.ReadLine();
                             Console.Write("Ingresa tu contraseña: ");
-                            string newUserPassword = Console.ReadLine();    
+                            string newUserPassword = Console.ReadLine();
                             int lastId = auth.GetLastId;
 
                             User newUser = new User(lastId + 1, newUserName, newUserPassword);
@@ -52,16 +53,21 @@ namespace ProyectoAdmonGrupo4
                             break;
                     }
                 }
-                else {
+                else
+                {
                     Console.WriteLine("\nSeleccione una opción:");
+                    Console.WriteLine("\nSeleccione una opción:");
+                    Console.WriteLine("-------EMPLEADOS-------");
                     Console.WriteLine("1. Insertar Empleado");
                     Console.WriteLine("2. Actualizar Empleado");
                     Console.WriteLine("3. Eliminar Empleado");
                     Console.WriteLine("4. Mostrar Empleados");
+                    Console.WriteLine("-------DEPARTAMENTO-------");
                     Console.WriteLine("5. Insertar Departamento");
                     Console.WriteLine("6. Actualizar Departamento");
                     Console.WriteLine("7. Eliminar Departamento");
                     Console.WriteLine("8. Mostrar Departamento");
+                    Console.WriteLine("-------ACCIONES-------");
                     Console.WriteLine("9. Guardar Checkpoint");
                     Console.WriteLine("10. Rollback (Deshacer/Undo)");
                     Console.WriteLine("11. Reaplicar Transacciones");
