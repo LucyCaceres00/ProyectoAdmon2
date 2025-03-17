@@ -19,7 +19,7 @@ namespace ProyectoAdmonGrupo4
 
         public void Login(string name, string password)
         {
-            User user = users.SingleOrDefault(item => item.Name == name);
+            User user = users.SingleOrDefault(item => (item.Name == name && item.Password == password));
 
             if( user != null )
             {
