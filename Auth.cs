@@ -14,10 +14,11 @@ namespace ProyectoAdmonGrupo4
         private User UserAuthenticated { get; set; }
         private List<string> logAutenticacion;
         private string logAutenticacionFilePath = "logAutenticacion.json";
+        private string usersFilePath = "users.json";
 
         public Auth()
         {
-            users = new List<User>();
+            users = CargarDatos<List<User>>(usersFilePath) ?? new List<User>();
             logAutenticacion = CargarDatos<List<string>>(logAutenticacionFilePath) ?? new List<string>();
         }
 
@@ -39,8 +40,16 @@ namespace ProyectoAdmonGrupo4
 
         public void SignUp(User user)
         {
+            if (users.Any(u => u.Name.Equals(user.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                Console.WriteLine("** El nombre de usuario ya está en uso.");
+                return;
+            }
             users.Add(user);
-            GuardarDatos("users.json", users);
+            GuardarDatos(usersFilePath, users);
+
+            logAutenticacion.Add($"Registro exitoso: {user.Name} - {DateTime.Now}");
+            GuardarDatos(logAutenticacionFilePath, logAutenticacion);
             Console.WriteLine("** Usuario registrado con éxito");
         }
 
@@ -62,10 +71,11 @@ namespace ProyectoAdmonGrupo4
         }
 
         public User GetAuthenticatedUser => UserAuthenticated;
+
         public string GetAuthenticatedUserName()
         {
             return UserAuthenticated?.Name ?? "Desconocido";
         }
-        public int GetLastId => users.Count();
+        public int GetLastId => users.Any() ? users.Max(u => u.Id) : 0;
     }
 }

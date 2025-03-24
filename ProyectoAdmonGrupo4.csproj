@@ -80,6 +80,7 @@
     <Compile Include="Auth.cs" />
     <Compile Include="ControlConcurencia.cs" />
     <Compile Include="DataBase.cs" />
+    <Compile Include="DataWarehouse.cs" />
     <Compile Include="Departamento.cs" />
     <Compile Include="Empleado.cs" />
     <Compile Include="Program.cs" />

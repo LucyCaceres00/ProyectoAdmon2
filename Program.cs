@@ -43,9 +43,9 @@ namespace ProyectoAdmonGrupo4
                             string newUserName = Console.ReadLine();
                             Console.Write("Ingresa tu contraseña: ");
                             string newUserPassword = Console.ReadLine();
-                            int lastId = auth.GetLastId;
+                            int newId = auth.GetLastId + 1;
 
-                            User newUser = new User(lastId + 1, newUserName, newUserPassword);
+                            User newUser = new User(newId, newUserName, newUserPassword);
                             auth.SignUp(newUser);
                             break;
 
@@ -74,7 +74,8 @@ namespace ProyectoAdmonGrupo4
                     Console.WriteLine("12. Simular fallo");
                     Console.WriteLine("-------CONCURRENCIA-------");
                     Console.WriteLine("13. Simular Técnicas de Concurrencia");
-                    Console.WriteLine("14. Salir");
+                    Console.WriteLine("14. Generar DataWarehouse");
+                    Console.WriteLine("15. Salir");
                     Console.Write("Opción: ");
 
                     string opcion = Console.ReadLine();
@@ -134,6 +135,10 @@ namespace ProyectoAdmonGrupo4
                             Console.ReadLine();
                             break;
                         case "14":
+                            DataWarehouse dw = new DataWarehouse();
+                            dw.GenerarDataWarehouse(auth.GetAuthenticatedUserName());
+                            break;
+                        case "15":
                             ejecutando = false;
                             break;
                         default:
