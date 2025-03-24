@@ -1,30 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
 using Newtonsoft.Json;
 
 namespace ProyectoAdmonGrupo4
 {
     public class DataBase
     {
-        private List<Empleado> empleados;
-        private List<Departamento> departamentos;
-        private Stack<List<Empleado>> checkpointStack = new Stack<List<Empleado>>();
+        private List<Empleado> empleados = new List<Empleado>();
+        private List<Departamento> departamentos = new List<Departamento>();
+        private Stack<List<Empleado>> checkpoinEmpleadotStack = new Stack<List<Empleado>>();
         private Stack<List<Departamento>> checkpointDepartamentosStack = new Stack<List<Departamento>>();
+        private HashSet<int> idsActualizados = new HashSet<int>(); //MAPEAR LOS REGISTROS QUE FUERON ACTUALIZADO
         private Stack<List<string>> checkpointLogStack = new Stack<List<string>>();
-        private List<string> logTransacciones;
-        private string databaseFilePath = "database.json";
-        private string logTransaccionesFilePath = "logTransacciones.json";
+        private List<TransactionLog> logTransacciones = new List<TransactionLog>();
+        //private List<string> transacciones;//VARIABLE PARA TRANSACCIONES LOCALES
+        private string empleadosJSON = "empleados_checkpoint.json";
+        private string departamentosJSON = "departamentos_checkpoint.json";
+        private string logFilePath = "logTransacciones.json";
+        private Auth auth;
 
-        public DataBase()
+        public DataBase(Auth authInstance)
         {
-            empleados = CargarDatos<List<Empleado>>(databaseFilePath) ?? new List<Empleado>();
-            logTransacciones = CargarDatos<List<string>>(logTransaccionesFilePath) ?? new List<string>();
-            departamentos = new List<Departamento>();
+            this.auth = authInstance;
+            empleados = CargarDatos<List<Empleado>>(empleadosJSON) ?? new List<Empleado>();
+            departamentos = CargarDatos<List<Departamento>>(departamentosJSON) ?? new List<Departamento>();
         }
+        private string ObtenerTimestamp() => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         private T CargarDatos<T>(string filePath)
         {
             if (File.Exists(filePath))
@@ -39,20 +45,20 @@ namespace ProyectoAdmonGrupo4
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
             File.WriteAllText(filePath, json);
         }
-
-
         public void InsertarEmpleado(int id, string nombre, int idDepartamento)
         {
+            string usuario = auth.GetAuthenticatedUserName();
             if (!departamentos.Any(d => d.Id == idDepartamento))
             {
                 Console.WriteLine("Error: No existe el departamento.");
                 return;
             }
             empleados.Add(new Empleado(id, nombre, idDepartamento));
-            logTransacciones.Add($"INSERT {id} {nombre} {idDepartamento}");
-            GuardarDatos(databaseFilePath, empleados);
-            GuardarDatos(logTransaccionesFilePath, logTransacciones);
-        }   
+            //transacciones.Add($"INSERT {id} {nombre} {idDepartamento}");
+            var log = new TransactionLog(ObtenerTimestamp(), usuario, "INSERT", $"Empleado: {id}, {nombre}, {idDepartamento}");
+            logTransacciones.Add(log);
+            GuardarLogEnArchivo();
+        }
         private List<Empleado> ClonarListaEmpleados(List<Empleado> lista)
         {
             return lista.Select(e => new Empleado(e.Id, e.Nombre, e.IdDepartamento)).ToList();
@@ -65,18 +71,28 @@ namespace ProyectoAdmonGrupo4
 
         public void ActualizarEmpleado(int id, string nuevoNombre)
         {
+            string usuario = auth.GetAuthenticatedUserName();
             var emp = empleados.FirstOrDefault(e => e.Id == id);
             if (emp != null)
             {
                 emp.Nombre = nuevoNombre;
-                logTransacciones.Add($"UPDATE {id} {nuevoNombre}");
+                //transacciones.Add($"UPDATE {id} {nuevoNombre}");
+                Console.WriteLine($"Empleado actualizado...");
+                var log = new TransactionLog(ObtenerTimestamp(), usuario, "UPDATE", $"Empleado: {id}, {nuevoNombre}");
+                logTransacciones.Add(log);
+                GuardarLogEnArchivo();
             }
         }
 
         public void EliminarEmpleado(int id)
         {
+            string usuario = auth.GetAuthenticatedUserName();
             empleados.RemoveAll(e => e.Id == id);
-            logTransacciones.Add($"DELETE {id}");
+            //transacciones.Add($"DELETE {id}");
+            Console.WriteLine($"Empleado eliminado...");
+            var log = new TransactionLog(ObtenerTimestamp(), usuario, "DELETE", $"Empleado: {id}");
+            logTransacciones.Add(log);
+            GuardarLogEnArchivo();
         }
 
         public void MostrarEmpleados()
@@ -94,26 +110,40 @@ namespace ProyectoAdmonGrupo4
 
         public void InsertarDepartamento(int id, string nombre)
         {
+            string usuario = auth.GetAuthenticatedUserName();
+
             var nuevoDepartamento = new Departamento(id, nombre);
             departamentos.Add(nuevoDepartamento);
-            logTransacciones.Add($"INSERT DEPARTAMENTO {id} {nombre}");
+            //transacciones.Add($"INSERT DEPARTAMENTO {id} {nombre}");
             Console.WriteLine($"Departamento agregado: {nuevoDepartamento}");
+            var log = new TransactionLog(ObtenerTimestamp(), usuario, "INSERT", $"Departamento: {id}, {nombre}");
+            logTransacciones.Add(log);
+            GuardarLogEnArchivo();
         }
-
         public void ActualizarDepartamento(int id, string nuevoNombre)
         {
-            var dep = departamentos.FirstOrDefault(e => e.Id == id);
+            string usuario = auth.GetAuthenticatedUserName();
+            var dep = departamentos.FirstOrDefault(d => d.Id == id);
             if (dep != null)
             {
                 dep.Nombre = nuevoNombre;
-                logTransacciones.Add($"UPDATE {id} {nuevoNombre}");
+                //transacciones.Add($"UPDATE {id} {nuevoNombre}");
+                Console.WriteLine($"Departamento actualizado...");
+                var log = new TransactionLog(ObtenerTimestamp(), usuario, "UPDATE", $"Departamento: {id}, {nuevoNombre}");
+                logTransacciones.Add(log);
+                GuardarLogEnArchivo();
             }
         }
 
         public void EliminarDepartamento(int id)
         {
-            departamentos.RemoveAll(e => e.Id == id);
-            logTransacciones.Add($"DELETE {id}");
+            string usuario = auth.GetAuthenticatedUserName();
+            departamentos.RemoveAll(d => d.Id == id);
+            //transacciones.Add($"DELETE {id}");
+            Console.WriteLine($"Departamento eliminado...");
+            var log = new TransactionLog(ObtenerTimestamp(), usuario, "DELETE", $"Departamento: {id}");
+            logTransacciones.Add(log);
+            GuardarLogEnArchivo();
         }
 
         public void MostrarDepartamentos()
@@ -143,21 +173,24 @@ namespace ProyectoAdmonGrupo4
 
         public void HacerCheckpoint()
         {
-            checkpointStack.Push(ClonarListaEmpleados(empleados));
+            checkpoinEmpleadotStack.Push(ClonarListaEmpleados(empleados));
             checkpointDepartamentosStack.Push(ClonarListaDepartamentos(departamentos));
-            checkpointLogStack.Push(new List<string>(logTransacciones));
+            //checkpointLogStack.Push(new List<string>(transacciones));
+            GuardarDatos("empleados_checkpoint.json", empleados);
+            GuardarDatos("departamentos_checkpoint.json", departamentos);
             Console.WriteLine("Checkpoint guardado correctamente.");
         }
 
         public void Rollback()
         {
-            if (checkpointStack.Count > 0 && checkpointDepartamentosStack.Count > 0 && checkpointLogStack.Count > 0)
+            if (checkpoinEmpleadotStack.Count > 0 && checkpointDepartamentosStack.Count > 0 && checkpointLogStack.Count > 0)
             {
-                empleados = ClonarListaEmpleados(checkpointStack.Pop());
+                empleados = ClonarListaEmpleados(checkpoinEmpleadotStack.Pop());
                 departamentos = ClonarListaDepartamentos(checkpointDepartamentosStack.Pop());
-                logTransacciones = new List<string>(checkpointLogStack.Pop());
-                GuardarDatos(databaseFilePath, empleados);
-                GuardarDatos(logTransaccionesFilePath, logTransacciones);
+                //transacciones = new List<string>(checkpointLogStack.Pop());
+                GuardarDatos(empleadosJSON, empleados);
+                GuardarDatos(departamentosJSON, departamentos);
+                //GuardarDatos(logFilePath, transacciones);
                 Console.WriteLine("Se restauró el último checkpoint correctamente.");
             }
             else
@@ -165,72 +198,80 @@ namespace ProyectoAdmonGrupo4
                 Console.WriteLine("No hay checkpoints guardados.");
             }
         }
-
         public void ReaplicarTransacciones()
         {
             Console.WriteLine("Reaplicando transacciones...");
+            Console.WriteLine("Reaplicando empleados...");
+            ReaplicarEmpleados();
+            Console.WriteLine("Reaplicando departamentos...");
+            ReaplicarDepartamentos();
+            Console.WriteLine("Reaplicación completa.");
+        }
 
-            foreach (var log in logTransacciones)
+        private void ReaplicarEmpleados()
+        {
+            // Verifica los empleados en el checkpoint
+            var empleadosCheckpoint = ClonarListaEmpleados(checkpoinEmpleadotStack.Peek());
+
+            // Reaplica los empleados insertados
+            foreach (var empleado in empleadosCheckpoint)
             {
-                string[] partes = log.Split(' ');
-                string operacion = partes[0];
-
-                switch (operacion)
+                var empExistente = empleados.FirstOrDefault(e => e.Id == empleado.Id);
+                if (empExistente == null)
                 {
-                    case "INSERT":
-                        if (partes[1] == "DEPARTAMENTO")
-                        {
-                            int idDep = int.Parse(partes[2]);
-                            string nombreDep = partes[3];
-                            if (!departamentos.Any(d => d.Id == idDep))
-                            {
-                                departamentos.Add(new Departamento(idDep, nombreDep));
-                                Console.WriteLine($"Reinsertado Departamento: {idDep}, {nombreDep}");
-                            }
-                        }
-                        else
-                        {
-                            int idEmp = int.Parse(partes[1]);
-                            string nombreEmp = partes[2];
-                            int idDep = int.Parse(partes[3]);
-                            if (!empleados.Any(e => e.Id == idEmp))
-                            {
-                                empleados.Add(new Empleado(idEmp, nombreEmp, idDep));
-                                Console.WriteLine($"Reinsertado Empleado: {idEmp}, {nombreEmp}, {idDep}");
-                            }
-                        }
-                        break;
-
-                    case "UPDATE":
-                        int idUpdate = int.Parse(partes[1]);
-                        string nuevoNombre = partes[2];
-                        var empleado = empleados.FirstOrDefault(e => e.Id == idUpdate);
-                        if (empleado != null)
-                        {
-                            empleado.Nombre = nuevoNombre;
-                            Console.WriteLine($"Actualizado Empleado: {idUpdate}, {nuevoNombre}");
-                        }
-                        else
-                        {
-                            var departamento = departamentos.FirstOrDefault(d => d.Id == idUpdate);
-                            if (departamento != null)
-                            {
-                                departamento.Nombre = nuevoNombre;
-                                Console.WriteLine($"Actualizado Departamento: {idUpdate}, {nuevoNombre}");
-                            }
-                        }
-                        break;
-
-                    case "DELETE":
-                        int idDelete = int.Parse(partes[1]);
-                        empleados.RemoveAll(e => e.Id == idDelete);
-                        departamentos.RemoveAll(d => d.Id == idDelete);
-                        Console.WriteLine($"Eliminado ID: {idDelete}");
-                        break;
+                    // Si el empleado no existe en el estado actual, lo agregamos
+                    empleados.Add(empleado);
+                    Console.WriteLine($"Reinsertado Empleado: {empleado.Id}, {empleado.Nombre}");
+                }
+                else if (empExistente.Nombre != empleado.Nombre)
+                {
+                    // Si el empleado existe pero su nombre ha cambiado, lo actualizamos
+                    empExistente.Nombre = empleado.Nombre;
+                    Console.WriteLine($"Actualizado Empleado: {empleado.Id}, {empleado.Nombre}");
                 }
             }
-            Console.WriteLine("Transacciones reaplicadas correctamente.");
+
+            // Eliminar empleados que estaban en el checkpoint pero no existen en el estado actual
+            var empleadosParaEliminar = empleados.Where(e => !empleadosCheckpoint.Any(ee => ee.Id == e.Id)).ToList();
+            foreach (var emp in empleadosParaEliminar)
+            {
+                empleados.Remove(emp);
+                Console.WriteLine($"Eliminado Empleado: {emp.Id}");
+            }
         }
+
+        private void ReaplicarDepartamentos()
+        {
+            // Verifica los departamentos en el checkpoint
+            var departamentosCheckpoint = ClonarListaDepartamentos(checkpointDepartamentosStack.Peek());
+
+            // Reaplica los departamentos insertados
+            foreach (var departamento in departamentosCheckpoint)
+            {
+                var depExistente = departamentos.FirstOrDefault(d => d.Id == departamento.Id);
+                if (depExistente == null)
+                {
+                    // Si el departamento no existe en el estado actual, lo agregamos
+                    departamentos.Add(departamento);
+                    Console.WriteLine($"Reinsertado Departamento: {departamento.Id}, {departamento.Nombre}");
+                }
+                else if (depExistente.Nombre != departamento.Nombre)
+                {
+                    // Si el departamento existe pero su nombre ha cambiado, lo actualizamos
+                    depExistente.Nombre = departamento.Nombre;
+                    Console.WriteLine($"Actualizado Departamento: {departamento.Id}, {departamento.Nombre}");
+                }
+            }
+
+            // Eliminar departamentos que estaban en el checkpoint pero no existen en el estado actual
+            var departamentosParaEliminar = departamentos.Where(d => !departamentosCheckpoint.Any(dd => dd.Id == d.Id)).ToList();
+            foreach (var dep in departamentosParaEliminar)
+            {
+                departamentos.Remove(dep);
+                Console.WriteLine($"Eliminado Departamento: {dep.Id}");
+            }
+        }
+
         public void SimularFallo()
         {
             Console.WriteLine("Simulando un fallo del sistema...");
@@ -238,5 +279,11 @@ namespace ProyectoAdmonGrupo4
             departamentos.Clear();
             Console.WriteLine("Se ha producido un fallo y los datos en memoria han sido eliminados.");
         }
+        private void GuardarLogEnArchivo()
+        {
+            string json = System.Text.Json.JsonSerializer.Serialize(logTransacciones, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(logFilePath, json);
+        }
+
     }
 }

@@ -10,8 +10,8 @@ namespace ProyectoAdmonGrupo4
     {
         static void Main()
         {
-            DataBase bd = new DataBase();
             Auth auth = new Auth();
+            DataBase bd = new DataBase(auth);
             SimuladorConcurrencia simulador = new SimuladorConcurrencia();
             bool ejecutando = true;
             bd.HacerCheckpoint();
@@ -23,7 +23,7 @@ namespace ProyectoAdmonGrupo4
                     Console.WriteLine("\n------ Autenticación ------");
                     Console.WriteLine("1. Iniciar sesión");
                     Console.WriteLine("2. Registrarse");
-
+                    Console.WriteLine("Seleccione una opción:");
                     string opcion = Console.ReadLine();
                     switch (opcion)
                     {

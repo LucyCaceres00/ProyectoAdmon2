@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ProyectoAdmonGrupo4
 {
-    internal class Auth
+    public class Auth
     {
         private List<User> users;
         private User UserAuthenticated { get; set; }
@@ -62,7 +62,10 @@ namespace ProyectoAdmonGrupo4
         }
 
         public User GetAuthenticatedUser => UserAuthenticated;
-
+        public string GetAuthenticatedUserName()
+        {
+            return UserAuthenticated?.Name ?? "Desconocido";
+        }
         public int GetLastId => users.Count();
     }
 }
