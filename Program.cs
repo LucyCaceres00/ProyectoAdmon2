@@ -12,6 +12,7 @@ namespace ProyectoAdmonGrupo4
         {
             DataBase bd = new DataBase();
             Auth auth = new Auth();
+            SimuladorConcurrencia simulador = new SimuladorConcurrencia();
             bool ejecutando = true;
             bd.HacerCheckpoint();
 
@@ -56,7 +57,6 @@ namespace ProyectoAdmonGrupo4
                 else
                 {
                     Console.WriteLine("\nSeleccione una opción:");
-                    Console.WriteLine("\nSeleccione una opción:");
                     Console.WriteLine("-------EMPLEADOS-------");
                     Console.WriteLine("1. Insertar Empleado");
                     Console.WriteLine("2. Actualizar Empleado");
@@ -72,7 +72,9 @@ namespace ProyectoAdmonGrupo4
                     Console.WriteLine("10. Rollback (Deshacer/Undo)");
                     Console.WriteLine("11. Reaplicar Transacciones");
                     Console.WriteLine("12. Simular fallo");
-                    Console.WriteLine("13. Salir");
+                    Console.WriteLine("-------CONCURRENCIA-------");
+                    Console.WriteLine("13. Simular Técnicas de Concurrencia");
+                    Console.WriteLine("14. Salir");
                     Console.Write("Opción: ");
 
                     string opcion = Console.ReadLine();
@@ -126,6 +128,12 @@ namespace ProyectoAdmonGrupo4
                             bd.SimularFallo();
                             break;
                         case "13":
+                            Console.WriteLine("\n------ Simulación de Técnicas de Concurrencia ------");
+                            simulador.SimularTransacciones();
+                            Console.WriteLine("\nPresiona Enter para continuar...");
+                            Console.ReadLine();
+                            break;
+                        case "14":
                             ejecutando = false;
                             break;
                         default:
