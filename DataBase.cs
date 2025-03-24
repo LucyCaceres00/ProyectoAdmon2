@@ -1,19 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace ProyectoAdmonGrupo4
 {
     public class DataBase
     {
-        private List<Empleado> empleados = new List<Empleado>();
-        private List<Departamento> departamentos = new List<Departamento>();
+        private List<Empleado> empleados;
+        private List<Departamento> departamentos;
         private Stack<List<Empleado>> checkpointStack = new Stack<List<Empleado>>();
         private Stack<List<Departamento>> checkpointDepartamentosStack = new Stack<List<Departamento>>();
         private Stack<List<string>> checkpointLogStack = new Stack<List<string>>();
-        private List<string> logTransacciones = new List<string>();
+        private List<string> logTransacciones;
+        private string databaseFilePath = "database.json";
+        private string logTransaccionesFilePath = "logTransacciones.json";
+
+        public DataBase()
+        {
+            empleados = CargarDatos<List<Empleado>>(databaseFilePath) ?? new List<Empleado>();
+            logTransacciones = CargarDatos<List<string>>(logTransaccionesFilePath) ?? new List<string>();
+            departamentos = new List<Departamento>();
+        }
+        private T CargarDatos<T>(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                string json = File.ReadAllText(filePath);
+                return JsonConvert.DeserializeObject<T>(json);
+            }
+            return default(T);
+        }
+        private void GuardarDatos<T>(string filePath, T data)
+        {
+            string json = JsonConvert.SerializeObject(data, Formatting.Indented);
+            File.WriteAllText(filePath, json);
+        }
+
 
         public void InsertarEmpleado(int id, string nombre, int idDepartamento)
         {
@@ -24,7 +50,9 @@ namespace ProyectoAdmonGrupo4
             }
             empleados.Add(new Empleado(id, nombre, idDepartamento));
             logTransacciones.Add($"INSERT {id} {nombre} {idDepartamento}");
-        }
+            GuardarDatos(databaseFilePath, empleados);
+            GuardarDatos(logTransaccionesFilePath, logTransacciones);
+        }   
         private List<Empleado> ClonarListaEmpleados(List<Empleado> lista)
         {
             return lista.Select(e => new Empleado(e.Id, e.Nombre, e.IdDepartamento)).ToList();
@@ -128,6 +156,8 @@ namespace ProyectoAdmonGrupo4
                 empleados = ClonarListaEmpleados(checkpointStack.Pop());
                 departamentos = ClonarListaDepartamentos(checkpointDepartamentosStack.Pop());
                 logTransacciones = new List<string>(checkpointLogStack.Pop());
+                GuardarDatos(databaseFilePath, empleados);
+                GuardarDatos(logTransaccionesFilePath, logTransacciones);
                 Console.WriteLine("Se restauró el último checkpoint correctamente.");
             }
             else
